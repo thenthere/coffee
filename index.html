@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>동호회 커피 DB & Map</title>
+    <!-- Tailwind CSS (디자인 라이브러리) -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Chart.js (시각화 라이브러리) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #121212; color: #e0e0e0; font-family: 'Pretendard', sans-serif; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto">
+        <!-- 헤더 -->
+        <header class="mb-8 text-center md:text-left">
+            <h1 class="text-3xl font-bold text-amber-400">☕ 사내 커피 동호회 아지트</h1>
+            <p class="text-gray-400 mt-2">로스터리 제품 분석 및 취향 매칭 가이드 (나무사이로 편)</p>
+        </header>
+
+        <!-- 메인 콘텐츠 영역 -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- 왼쪽: 커피 취향 Map (시각화) -->
+            <div class="lg:col-span-2 bg-[#1e1e1e] p-6 rounded-2xl shadow-xl">
+                <h2 class="text-xl font-bold mb-4 text-amber-200">📍 커피 취향 매트릭스 Map</h2>
+                <p class="text-xs text-gray-400 mb-4">점 위에 마우스를 올리거나 터치하면 커피 상세 정보가 뜹니다.</p>
+                <div class="relative w-full h-[350px] md:h-[400px]">
+                    <canvas id="coffeeMap"></canvas>
+                </div>
+            </div>
+
+            <!-- 오른쪽: 필터 및 인터랙티브 정보창 -->
+            <div class="flex flex-col gap-6">
+                <!-- 필터 섹션 -->
+                <div class="bg-[#1e1e1e] p-6 rounded-2xl shadow-xl">
+                    <h3 class="text-lg font-bold mb-3 text-amber-200">🔍 다차원 필터</h3>
+                    
+                    <div class="mb-4">
+                        <label class="block text-xs text-gray-400 mb-1">원산지(국가)</label>
+                        <select id="originFilter" class="w-full bg-[#2a2a2a] border border-gray-700 rounded p-2 text-sm text-white" onchange="filterCoffee()">
+                            <option value="all">전체 국가</option>
+                            <option value="Ethiopia">에티오피아</option>
+                            <option value="Kenya">케냐</option>
+                            <option value="Colombia">콜롬비아</option>
+                            <option value="Guatemala">과테말라</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">로스팅 정도</label>
+                        <select id="roastingFilter" class="w-full bg-[#2a2a2a] border border-gray-700 rounded p-2 text-sm text-white" onchange="filterCoffee()">
+                            <option value="all">전체 볶음도</option>
+                            <option value="Light">Light</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Well-done">Well-done / Dark</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 선택된 커피 상세정보 창 -->
+                <div class="bg-[#1e1e1e] p-6 rounded-2xl shadow-xl flex-1 border border-amber-500/20" id="detailBox">
+                    <h3 class="text-lg font-bold text-gray-400 mb-2">💡 커피 상세 정보</h3>
+                    <p class="text-sm text-gray-500">왼쪽 맵의 점을 클릭하거나 아래 리스트에서 커피를 선택하면 상세 정보와 스토리가 여기에 표시됩니다.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 하단: 커피 리스트 -->
+        <div class="mt-8 bg-[#1e1e1e] p-6 rounded-2xl shadow-xl">
+            <h2 class="text-xl font-bold mb-4 text-amber-200">📋 등록된 커피 리스트</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-gray-300">
+                    <thead class="bg-[#2a2a2a] text-amber-400 text-xs">
+                        <tr>
+                            <th class="p-3 rounded-l">종류</th>
+                            <th class="p-3">이름</th>
+                            <th class="p-3">원산지</th>
+                            <th class="p-3">볶음도</th>
+                            <th class="p-3">주요 향미</th>
+                            <th class="p-3 rounded-r">가격</th>
+                        </tr>
+                    </thead>
+                    <tbody id="coffeeTableBody">
+                        <!-- 자바스크립트로 주입됨 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 데이터 연산 및 시각화 스크립트 -->
+    <script>
+        // 앞서 정의한 coffee_db.json 데이터 구조 연동 (테스트용 하드코딩 데이터 포함)
+        const coffeeData = [
+            { id: "B001", name: "그리니", type: "Blend", origin: ["Ethiopia", "Kenya"], roasting: "Medium", flavors: ["천도복숭아", "체리", "오키"], price: 23500, desc: "26 여름 블렌드. 캐스크 숙성의 독특한 향미.", x: 4, y: 8 },
+            { id: "B002", name: "피크닉", type: "Blend", origin: ["Colombia", "Ethiopia"], roasting: "Medium", flavors: ["벚꽃", "파인애플", "쥬시"], price: 20500, desc: "발랄한 과일바구니 향미. 옴블리곤 생두 사용.", x: 5, y: 7.5 },
+            { id: "B003", name: "녹음", type: "Blend", origin: ["Guatemala", "Kenya", "Mexico"], roasting: "Dark", flavors: ["건자두", "카카오", "당밀"], price: 18000, desc: "시즈널 에스프레소 블렌드. 묵직하고 자연스러운 균형.", x: 8, y: 3 },
+            { id: "B004", name: "위 (WE)", type: "Blend", origin: ["Guatemala", "Ethiopia"], roasting: "Medium", flavors: ["자두", "복숭아", "바닐라"], price: 15500, desc: "하우스 블렌드 1호. 고소함과 향기로움의 적절한 배합.", x: 5, y: 6 },
+            { id: "B005", name: "숲", type: "Blend", origin: ["Ethiopia", "Brazil"], roasting: "Well-done", flavors: ["볶은 땅콩", "코코아", "민트"], price: 15000, desc: "달고나의 달콤쌉싸름함과 시원한 숲속 공기 같은 조화.", x: 7, y: 4 },
+            { id: "B007", name: "풍요로운 땅", type: "Blend", origin: ["Brazil", "Colombia", "Guatemala"], roasting: "Dark", flavors: ["밀크초콜릿", "땅콩카라멜"], price: 13500, desc: "산미가 낮고 고소하여 편안하게 마시는 베스트셀러.", x: 8.5, y: 2.5 },
+            { id: "S001", name: "게뎁 무산소", type: "Single Origin", origin: ["Ethiopia"], roasting: "Medium", flavors: ["패션프룻", "살구잼", "딸기"], price: 21500, desc: "고도 2310m 생두. 무산소 특유의 톡 쏘는 과일 맛.", x: 4, y: 9 },
+            { id: "S003", name: "림웨", type: "Single Origin", origin: ["Kenya"], roasting: "Medium", flavors: ["열대과일", "코코넛", "크리미"], price: 27000, desc: "케냐 서부 고원 단일 농장. AA등급의 고르고 단단한 밀도.", x: 5.5, y: 7 },
+            { id: "S005", name: "내가 좋아하는 너는 언제나", type: "Single Origin", origin: ["Colombia"], roasting: "Light", flavors: ["베르가못", "로즈마리", "실키"], price: 27500, desc: "최고급 게샤 품종. 화사한 꽃 향과 매끄러운 촉감.", x: 2, y: 9.5 }
+        ];
+
+        let chartInstance = null;
+
+        // 차트 초기화 함수
+        function initChart(data) {
+            const ctx = document.getElementById('coffeeMap').getContext('2d');
+            
+            if (chartInstance) { chartInstance.destroy(); }
+
+            // 원산지별 색상 매핑
+            const getColor = (origins) => {
+                if (origins.includes('Ethiopia')) return '#fbbf24'; // Amber
+                if (origins.includes('Kenya')) return '#ef4444'; // Red
+                if (origins.includes('Colombia')) return '#10b981'; // Green
+                return '#3b82f6'; // Blue (Guatemala 등)
+            };
+
+            const chartData = {
+                datasets: data.map(item => ({
+                    label: item.name,
+                    data: [{ x: item.x, y: item.y }],
+                    backgroundColor: getColor(item.origin),
+                    pointRadius: 9,
+                    pointHoverRadius: 12,
+                    rawInfo: item
+                }))
+            };
+
+            chartInstance = new Chart(ctx, {
+                type: 'scatter',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const info = context.dataset.rawInfo;
+                                    return `${info.name} (${info.roasting}) - ${info.flavors.join(', ')}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: '▶▶ 볶음도 (Light → Dark) ▶▶', color: '#9ca3af' },
+                            min: 1, max: 10, grid: { color: '#2a2a2a' }, ticks: { display: false }
+                        },
+                        y: {
+                            title: { display: true, text: '▲▲ 향미 성향 (고소함 → 과일/꽃향) ▲▲', color: '#9ca3af' },
+                            min: 1, max: 10, grid: { color: '#2a2a2a' }, ticks: { display: false }
+                        }
+                    },
+                    onClick: (e, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].datasetIndex;
+                            showDetail(chartInstance.data.datasets[index].rawInfo);
+                        }
+                    }
+                }
+            });
+        }
+
+        // 상세 정보창 표시
+        function showDetail(coffee) {
+            const box = document.getElementById('detailBox');
+            box.innerHTML = `
+                <span class="text-xs font-semibold px-2 py-1 rounded bg-amber-500/20 text-amber-400 mb-2 inline-block">${coffee.type}</span>
+                <h3 class="text-2xl font-bold text-white mb-1">${coffee.name}</h3>
+                <p class="text-xs text-gray-400 mb-3">블렌딩/원산지: ${coffee.origin.join(', ')} | 볶음도: ${coffee.roasting}</p>
+                <div class="mb-3">
+                    <span class="text-xs text-gray-500 block">주요 플레이버</span>
+                    <p class="text-sm text-amber-300 font-medium">${coffee.flavors.join(', ')}</p>
+                </div>
+                <p class="text-sm text-gray-300 bg-[#252525] p-3 rounded-lg leading-relaxed">${coffee.desc}</p>
+                <p class="text-right text-amber-400 font-bold mt-4 text-lg">₩${coffee.price.toLocaleString()}</p>
+            `;
+        }
+
+        // 테이블 리스트 그리기
+        function renderTable(data) {
+            const tbody = document.getElementById('coffeeTableBody');
+            tbody.innerHTML = data.map(item => `
+                <tr class="border-b border-gray-800 hover:bg-[#252525] cursor-pointer" onclick='showDetail(${JSON.stringify(item)})'>
+                    <td class="p-3 text-xs text-gray-400">${item.type}</td>
+                    <td class="p-3 font-semibold text-white">${item.name}</td>
+                    <td class="p-3 text-gray-400">${item.origin.join(', ')}</td>
+                    <td class="p-3">${item.roasting}</td>
+                    <td class="p-3 text-amber-300/80 text-xs">${item.flavors.join(', ')}</td>
+                    <td class="p-3 font-bold text-right">₩${item.price.toLocaleString()}</td>
+                </tr>
+            `).join('');
+        }
+
+        // 필터링 기능
+        function filterCoffee() {
+            const origin = document.getElementById('originFilter').value;
+            const roasting = document.getElementById('roastingFilter').value;
+
+            let filtered = coffeeData;
+
+            if (origin !== 'all') {
+                filtered = filtered.filter(c => c.origin.includes(origin));
+            }
+            if (roasting !== 'all') {
+                if (roasting === 'Well-done') {
+                    filtered = filtered.filter(c => c.roasting === 'Well-done' || c.roasting === 'Dark');
+                } else {
+                    filtered = filtered.filter(c => c.roasting === roasting);
+                }
+            }
+
+            initChart(filtered);
+            renderTable(filtered);
+        }
+
+        // 최초 실행
+        initChart(coffeeData);
+        renderTable(coffeeData);
+    </script>
+</body>
+</html>
