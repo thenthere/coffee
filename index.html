@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>☕ 사내 커피 동호회 통합 아지트 DB</title>
+    <title>☕ 사내 커피 동호회 아지트 허브</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Noto Sans KR', sans-serif; background-color: #121212; color: #e0e0e0; }
@@ -12,225 +13,345 @@
 </head>
 <body class="min-h-screen flex flex-col p-4 md:p-8">
 
-    <div class="max-w-6xl w-full mx-auto flex-grow">
-        <header class="mb-8 border-b border-stone-800 pb-5 flex flex-col md:flex-row justify-between items-center gap-4">
+    <div class="max-w-7xl w-full mx-auto flex-grow space-y-8">
+        <header class="border-b border-stone-800 pb-5 flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="text-center md:text-left">
                 <h1 class="text-3xl font-bold text-amber-400 flex items-center justify-center md:justify-start gap-2">
-                    <span>☕</span> 사내 스페셜티 커피 아지트
+                    <span>☕</span> 사내 커피 동호회 통합 아지트
                 </h1>
-                <p class="text-stone-400 mt-1.5 text-sm" id="page-subtitle">통합 로스터리 데이터 허브 로딩 중...</p>
+                <p class="text-stone-400 mt-1 text-sm">로스터리별 제품 다차원 데이터 분석 가이드 패널</p>
             </div>
-            <div class="bg-stone-900 px-4 py-2 rounded-full border border-stone-800 text-xs text-stone-500 font-medium" id="sync-badge">
-                데이터 동기화 대기 중
+            <div class="bg-stone-900 px-4 py-2 rounded-xl border border-stone-800 text-xs text-emerald-400 font-mono" id="sync-badge">
+                coffee_db.json 로드 대기 중
             </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-            
-            <div class="lg:col-span-1 bg-[#1a1a1a] p-6 rounded-2xl border border-stone-800 shadow-xl flex flex-col gap-5">
-                <h2 class="text-lg font-bold text-amber-200 border-b border-stone-800 pb-2 flex items-center gap-2">
-                    <span>🔍</span> 다차원 스마트 필터
-                </h2>
-                
+        <section class="bg-[#1a1a1a] p-6 rounded-2xl border border-stone-800 shadow-xl">
+            <h2 class="text-lg font-bold text-amber-200 mb-4 flex items-center gap-2">
+                <span>🔍</span> 다차원 조건부 스마트 필터
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 <div>
-                    <label class="block text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">커피명 / 향미 검색</label>
-                    <input type="text" id="keywordSearch" placeholder="예: 게이샤, 체리, 디카페인..." 
-                           class="w-full bg-[#242424] border border-stone-700 text-white placeholder-stone-500 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-amber-500 transition-all">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">로스터리 선택</label>
-                    <select id="roasteryFilter" class="w-full bg-[#242424] border border-stone-700 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-amber-500 transition-all">
+                    <label class="block text-[11px] font-bold text-stone-400 mb-1.5 uppercase">로스터리</label>
+                    <select id="roasteryFilter" class="w-full bg-[#242424] border border-stone-700 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
                         <option value="all">전체 브랜드</option>
                         <option value="나무사이로">나무사이로</option>
                         <option value="매뉴팩트">매뉴팩트</option>
                         <option value="WERK">베르크 (WERK)</option>
                     </select>
                 </div>
-
                 <div>
-                    <label class="block text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">대분류 카테고리</label>
-                    <select id="categoryFilter" class="w-full bg-[#242424] border border-stone-700 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-amber-500 transition-all">
+                    <label class="block text-[11px] font-bold text-stone-400 mb-1.5 uppercase">카테고리</label>
+                    <select id="categoryFilter" class="w-full bg-[#242424] border border-stone-700 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
                         <option value="all">전체 상품군</option>
-                        <option value="블렌드">블렌드 (Blend)</option>
-                        <option value="싱글 오리진">싱글 오리진 (Single Origin)</option>
-                        <option value="간편 커피">간편 커피 (콜드브루/드립백)</option>
+                        <option value="블렌드">블렌드</option>
+                        <option value="싱글 오리진">싱글 오리진</option>
+                        <option value="간편 커피">간편 커피</option>
                     </select>
                 </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-stone-400 mb-1.5 uppercase">볶음도</label>
+                    <select id="roastingFilter" class="w-full bg-[#242424] border border-stone-700 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
+                        <option value="all">전체 로스팅</option>
+                        <option value="Light">Light</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Medium Light">Medium Light</option>
+                        <option value="Medium-Dark">Medium-Dark</option>
+                        <option value="Well-done">Well-done</option>
+                        <option value="Dark">Dark</option>
+                        <option value="French">French</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-stone-400 mb-1.5 uppercase">원산지 (국가)</label>
+                    <input type="text" id="originSearch" placeholder="예: Ethiopia, Peru" class="w-full bg-[#242424] border border-stone-700 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500 placeholder-stone-600">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-stone-400 mb-1.5 uppercase">생산자 / 농장</label>
+                    <input type="text" id="farmSearch" placeholder="예: 라스마리아스, 소농" class="w-full bg-[#242424] border border-stone-700 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500 placeholder-stone-600">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-stone-400 mb-1.5 uppercase">향미 / 컵노트</label>
+                    <input type="text" id="flavorSearch" placeholder="예: 체리, 초콜릿, 오키" class="w-full bg-[#242424] border border-stone-700 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500 placeholder-stone-600">
+                </div>
             </div>
+        </section>
 
-            <div class="lg:col-span-2 bg-[#1a1a1a] p-6 rounded-2xl border border-stone-800 shadow-xl flex flex-col justify-center min-h-[300px]" id="infoDetailBox">
-                <div class="text-center text-stone-500 py-12">
-                    <span class="text-4xl block mb-3">💡</span>
-                    <p class="text-sm">하단의 커피 테이블 리스트에서 행을 클릭하면<br>해당 원두의 깊은 비하인드 스토리와 가공 스펙이 가동됩니다.</p>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 bg-[#1a1a1a] p-6 rounded-2xl border border-stone-800 shadow-xl flex flex-col">
+                <h2 class="text-lg font-bold text-amber-200 mb-1 flex items-center gap-2">
+                    <span>📍</span> 스페셜티 커피 특징 군집화 맵 (Cluster Map)
+                </h2>
+                <p class="text-xs text-stone-500 mb-4">볶음도가 어두울수록 우측으로, 화사한 산미과 꽃향이 강할수록 상단으로 매트릭스 군집이 자동 정렬됩니다.</p>
+                <div class="relative w-full flex-grow h-[380px]">
+                    <canvas id="clusterMatrixMap"></canvas>
                 </div>
             </div>
 
+            <div class="lg:col-span-1 bg-[#1a1a1a] p-6 rounded-2xl border border-stone-800 shadow-xl flex flex-col justify-center min-h-[380px]" id="liveDetailPanel">
+                <div class="text-center text-stone-600 py-12">
+                    <span class="text-5xl block mb-4">💡</span>
+                    <p class="text-sm leading-relaxed">하단의 마스터 테이블 그리드에서<br>원하는 커피를 선택해 클릭하시면<br>비하인드 상세 스펙이 이곳에 즉시 채워집니다.</p>
+                </div>
+            </div>
         </div>
 
-        <div class="bg-[#1a1a1a] rounded-2xl border border-stone-800 shadow-xl overflow-hidden">
+        <section class="bg-[#1a1a1a] rounded-2xl border border-stone-800 shadow-xl overflow-hidden">
             <div class="p-5 border-b border-stone-800 bg-[#1e1e1e] flex justify-between items-center">
-                <h2 class="text-base font-bold text-stone-200">📋 실시간 마스터 데이터 그리드</h2>
-                <span class="text-xs bg-amber-950/40 text-amber-400 border border-amber-900/50 px-2.5 py-1 rounded-md" id="resultCount">
-                    조회된 데이터: 0개
+                <h2 class="text-base font-bold text-stone-200 flex items-center gap-2">
+                    <span>📋</span> 필터 동기화 커피 마스터 데이터 목록
+                </h2>
+                <span class="text-xs bg-amber-950/40 text-amber-400 border border-amber-900/50 px-3 py-1 rounded-lg" id="gridCounter">
+                    조회수: 0개
                 </span>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="bg-[#1e1e1e] text-stone-400 text-xs font-medium border-b border-stone-800">
+                        <tr class="bg-[#1e1e1e] text-stone-400 text-xs font-semibold tracking-wider border-b border-stone-800 uppercase">
                             <th class="p-4">로스터리</th>
                             <th class="p-4">카테고리</th>
                             <th class="p-4">커피 이름</th>
-                            <th class="p-4">볶음도 (로스팅)</th>
-                            <th class="p-4">가공방식</th>
-                            <th class="p-4">대표 플레이버</th>
-                            <th class="p-4 text-right">패키지 금액</th>
+                            <th class="p-4">원산지</th>
+                            <th class="p-4">볶음도</th>
+                            <th class="p-4">주요 향미 및 컵노트</th>
+                            <th class="p-4 text-right">패키지 가격</th>
                         </tr>
                     </thead>
-                    <tbody id="mainGridBody" class="divide-y divide-stone-900 text-sm text-stone-300">
-                        </tbody>
+                    <tbody id="coffeeMainTableBody" class="divide-y divide-stone-900 text-sm text-stone-300">
+                        <tr>
+                            <td colspan="7" class="p-8 text-center text-stone-500">데이터 저장소 파이프라인 연동 중...</td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
-            <div id="emptyGuide" class="hidden text-center py-16 text-stone-600 border-t border-stone-900">
-                <span class="text-3xl block mb-2">🔍</span> 검색 및 필터 조건에 매칭되는 커피 정보가 존재하지 않습니다.
+            <div id="noMatchGuide" class="hidden text-center py-20 text-stone-600">
+                <span class="text-4xl block mb-3">🔍</span> 설정하신 필터 검색 조합 조건에 부합하는 원두 가이드가 존재하지 않습니다.
             </div>
-        </div>
+        </section>
     </div>
 
-    <footer class="mt-12 border-t border-stone-900 pt-6 text-center text-xs text-stone-600 max-w-6xl w-full mx-auto pb-4">
-        <p>본 시스템은 외부 JSON 마스터 저장소를 비동기로 바인딩하는 무결성 데이터 웹 아키텍처 프로토타입입니다.</p>
-    </footer>
-
     <script>
-        let coffeeDataset = []; // 외부 json 로드 원본 배열 저장 공간
+        let rawCoffeeStore = []; 
+        let currentFilteredSet = [];
+        let chartEngineInstance = null;
 
-        // 칩 컴포넌트 색상 맵 프레임워크
-        const badgeColors = {
+        // 뱃지 및 테마 인덱스 컬러맵
+        const uiColorPalette = {
             "블렌드": "bg-blue-950/50 text-blue-400 border-blue-900/50",
             "싱글 오리진": "bg-emerald-950/50 text-emerald-400 border-emerald-900/50",
             "간편 커피": "bg-purple-950/50 text-purple-400 border-purple-900/50",
             "나무사이로": "bg-orange-950/40 text-orange-400 border-orange-900/40",
-            "매뉴팩트": "bg-stone-800 text-stone-300 border-stone-700",
-            "WERK": "bg-yellow-950/40 text-yellow-400 border-yellow-900/40"
+            "매뉴팩트": "bg-zinc-800 text-zinc-300 border-zinc-700",
+            "WERK": "bg-yellow-950/30 text-yellow-400 border-yellow-900/40"
         };
 
-        // 데이터 비동기 Fetch 전송 파이프라인 함수
-        async function fetchCoffeeDatabase() {
+        // 로스팅 문자열을 기반으로 군집화용 X축 좌표(1~10) 스케일링 지도 작성
+        const roastCoordinateAxisX = { 
+            'Light': 2, 'Medium Light': 3.5, 'Medium': 5, 
+            'Medium-Dark': 6.5, 'Well-done': 7.5, 'Dark': 8.5, 'French': 9.5 
+        };
+
+        // 플레이버 컵노트 텍스트 성향을 정밀 비교 연산하여 화사함 점수 Y축(1~10) 산출기
+        function computeFlavorClusterAxisY(flavors, desc) {
+            const dynamicHighFruitNotes = ['복숭아', '체리', '자두', '라즈베리', '오렌지', '딸기', '과일', '산미', '플로럴', '장미', '꽃', '베리', '패션프룻', '라임', '살구', '베르가못', '자스민', '쥬시'];
+            const dynamicLowBitterNotes = ['초콜릿', '카카오', '카라멜', '단맛', '땅콩', '아몬드', '토피넛', '흑설탕', '당밀', '묵직함', '바닐라', '버터', '가죽', '오키'];
+            
+            let baseScore = 5.5; 
+            const combinedText = flavors.join(' ') + ' ' + desc;
+            
+            dynamicHighFruitNotes.forEach(word => { if(combinedText.includes(word)) baseScore += 0.7; });
+            dynamicLowBitterNotes.forEach(word => { if(combinedText.includes(word)) baseScore -= 0.7; });
+            
+            return Math.max(1.5, Math.min(9.5, baseScore)); 
+        }
+
+        // 로컬/레포 `coffee_db.json` 비동기 Ajax 바인딩 컨트롤러
+        async function initiateCoffeeApplication() {
             try {
-                const response = await fetch('coffee_db.json');
-                if (!response.ok) throw new Error('데이터 서버 응답 실패');
-                
-                const data = await response.json();
-                coffeeDataset = data.products;
+                const fetchPipe = await fetch('coffee_db.json');
+                if(!fetchPipe.ok) throw new Error('DB 파일 전송 파싱 에러');
+                const parsedDb = await fetchPipe.json();
 
-                // 상단 메타 정보 파싱
-                document.getElementById('page-subtitle').innerText = `${data.roaster} 분석 가이드 가동 중`;
-                document.getElementById('sync-badge').innerText = `최종 갱신: ${data.last_updated}`;
-                document.getElementById('sync-badge').className = "bg-emerald-950/30 text-emerald-400 px-3 py-1 rounded-full border border-emerald-900/40 text-xs";
+                document.getElementById('sync-badge').innerText = `DB 연동 완료 (갱신: ${parsedDb.last_updated})`;
 
-                // 마스터 렌더링 구동
-                processFilterAndRender();
+                // 전처리 모델 체인 가동 (x, y 군집 좌표 동적 배정)
+                rawCoffeeStore = parsedDb.products.map( coffee => {
+                    return {
+                        ...coffee,
+                        clusterX: roastCoordinateAxisX[coffee.roasting] || 5,
+                        clusterY: computeFlavorClusterAxisY(coffee.flavors, coffee.description)
+                    }
+                });
 
-            } catch (error) {
-                console.error("AJAX 파싱 에러 발생:", error);
-                document.getElementById('mainGridBody').innerHTML = 
-                    `<tr><td colspan="7" class="p-8 text-center text-red-400">⚠️ 외부 coffee_db.json 호출에 실패했습니다. 로컬 크롬 확장 프로그램이나 가상 라이브 서버를 경유하세요.</td></tr>`;
+                // 초기 필터 컨디션 렌더링 파이어
+                processComplexFilterPipeline();
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('coffeeMainTableBody').innerHTML = `
+                    <tr><td colspan="7" class="p-8 text-center text-red-500">⚠️ 외부 coffee_db.json 호출에 실패했습니다. GitHub Pages 배포 환경이나 로컬 서버 터미널 환경에서 실행하세요.</td></tr>`;
             }
         }
 
-        // 선택한 행의 세부 디테일을 인터랙티브하게 표현하는 정보 주입기
-        function activateDetailBox(coffee) {
-            const box = document.getElementById('infoDetailBox');
-            box.className = "lg:col-span-2 bg-[#1e1e1e] p-6 rounded-2xl border border-amber-500/20 shadow-2xl transition-all duration-300";
-            box.innerHTML = `
-                <div class="flex justify-between items-start mb-3">
-                    <div class="flex gap-2">
-                        <span class="text-xs px-2 py-0.5 rounded border ${badgeColors[coffee.roastery]}">${coffee.roastery}</span>
-                        <span class="text-xs px-2 py-0.5 rounded border ${badgeColors[coffee.category]}">${coffee.category}</span>
+        // 클릭 버그를 완전 근절한 DOM 노드 주입형 실시간 디테일 뷰 포커스 함수
+        function updateLiveDetailPanel(coffee) {
+            const panel = document.getElementById('liveDetailPanel');
+            panel.innerHTML = `
+                <div class="space-y-5 animate-fadeIn">
+                    <div class="flex justify-between items-center">
+                        <div class="flex gap-2">
+                            <span class="text-[11px] font-bold px-2 py-0.5 rounded border ${uiColorPalette[coffee.roastery] || 'bg-stone-800'}">${coffee.roastery}</span>
+                            <span class="text-[11px] font-bold px-2 py-0.5 rounded border ${uiColorPalette[coffee.category] || 'bg-stone-800'}">${coffee.category}</span>
+                        </div>
+                        <span class="text-xs text-stone-600 font-mono">${coffee.id}</span>
                     </div>
-                    <span class="text-xs text-stone-600 font-mono">ID: ${coffee.id}</span>
-                </div>
-                <h3 class="text-2xl font-bold text-white tracking-tight mb-1">${coffee.name}</h3>
-                <p class="text-xs text-stone-400 mb-4">원산지: ${coffee.origin.join(', ')} | 로스팅: ${coffee.roasting}</p>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 bg-stone-900/50 p-4 rounded-xl border border-stone-800">
-                    <div>
-                        <span class="text-[10px] text-stone-500 font-bold block mb-0.5">가공 프로세스</span>
-                        <span class="text-sm text-stone-300">${coffee.process}</span>
-                    </div>
-                    <div>
-                        <span class="text-[10px] text-stone-500 font-bold block mb-0.5">조합 컵노트</span>
-                        <span class="text-sm text-amber-300 font-medium">${coffee.flavors.join(', ')}</span>
-                    </div>
-                </div>
 
-                <div class="mb-5">
-                    <span class="text-[10px] text-stone-500 font-bold block mb-1">원두 스토리 & 프로파일</span>
-                    <p class="text-sm text-stone-300 bg-stone-950 p-3.5 rounded-xl leading-relaxed border border-stone-900">${coffee.description}</p>
-                </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-white tracking-tight">${coffee.name}</h3>
+                        <p class="text-xs text-stone-400 mt-1">원산지: ${coffee.origin.join(', ')} · 볶음도: <span class="text-amber-400 font-medium">${coffee.roasting}</span></p>
+                    </div>
 
-                <div class="flex justify-between items-center pt-3 border-t border-stone-800">
-                    <span class="text-xs text-stone-500">패키지 중량: ${coffee.weight_g}g</span>
-                    <div class="text-right">
+                    <div class="bg-stone-900/60 p-4 rounded-xl border border-stone-800 space-y-3 text-xs">
+                        <div>
+                            <span class="text-stone-500 font-bold block mb-0.5">☕ 프로세싱 / 가공방식</span>
+                            <span class="text-stone-300 text-sm">${coffee.process || '정보 없음'}</span>
+                        </div>
+                        <div>
+                            <span class="text-stone-500 font-bold block mb-0.5">🍇 플레이버 노트 스펙</span>
+                            <span class="text-amber-300 font-medium text-sm">${coffee.flavors.join(', ')}</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <span class="text-[10px] font-bold text-stone-500 uppercase tracking-wide">커피 프로파일 & 테이스팅 스토리</span>
+                        <p class="text-sm text-stone-300 bg-stone-950 p-3.5 rounded-xl border border-stone-900 leading-relaxed">${coffee.description}</p>
+                    </div>
+
+                    <div class="flex justify-between items-center pt-3 border-t border-stone-800">
+                        <span class="text-xs text-stone-500">규격 중량: ${coffee.weight_g}g</span>
                         <span class="text-amber-400 font-bold text-2xl">₩${coffee.price_krw.toLocaleString()}</span>
                     </div>
                 </div>
             `;
         }
 
-        // 필터링 규칙 연산 및 그리드 리렌더링 코어 함수
-        function processFilterAndRender() {
-            const query = document.getElementById('keywordSearch').value.toLowerCase();
-            const selectedRoaster = document.getElementById('roasteryFilter').value;
-            const selectedCategory = document.getElementById('categoryFilter').value;
+        // 군집화 다이어그램 차트 드로잉 엔진 (Chart.js Scatter 객체 빌드)
+        function renderClusterMatrixChart(chartData) {
+            const ctx = document.getElementById('clusterMatrixMap').getContext('2d');
+            
+            if (chartEngineInstance) { chartEngineInstance.destroy(); }
 
-            // 서치 및 조건 연산 집계
-            const filtered = coffeeDataset.filter(item => {
-                const matchKeyword = item.name.toLowerCase().includes(query) || 
-                                     item.flavors.some(f => f.toLowerCase().includes(query)) ||
-                                     item.description.toLowerCase().includes(query);
-                const matchRoastery = selectedRoaster === 'all' || item.roastery === selectedRoaster;
-                const matchCategory = selectedCategory === 'all' || item.category === selectedCategory;
-                
-                return matchKeyword && matchRoastery && matchCategory;
+            const colorPicker = (roastery) => {
+                if(roastery === '나무사이로') return '#f97316';
+                if(roastery === '매뉴팩트') return '#a1a1aa';
+                return '#facc15'; // WERK
+            };
+
+            const compiledDatasets = chartData.map(coffee => {
+                return {
+                    label: coffee.name,
+                    data: [{ x: coffee.clusterX, y: coffee.clusterY }],
+                    backgroundColor: colorPicker(coffee.roastery),
+                    pointRadius: 10,
+                    pointHoverRadius: 14,
+                    borderColor: '#121212',
+                    borderWidth: 1.5,
+                    coffeeRawMeta: coffee
+                }
             });
 
-            // 현 카운트 수치 동기화
-            document.getElementById('resultCount').innerText = `조회된 데이터: ${filtered.length}개`;
-
-            // 테이블 돔 노드 가동
-            const tbody = document.getElementById('coffeeTableBody');
-            const targetBody = document.getElementById('mainGridBody');
-            const emptyGuide = document.getElementById('emptyGuide');
-
-            if(filtered.length === 0) {
-                targetBody.innerHTML = '';
-                emptyGuide.classList.remove('hidden');
-                return;
-            }
-            emptyGuide.classList.add('hidden');
-
-            targetBody.innerHTML = filtered.map(item => `
-                <tr class="border-b border-stone-900/60 hover:bg-stone-900/40 cursor-pointer transition-colors" onclick='activateDetailBox(${JSON.stringify(item)})'>
-                    <td class="p-4 whitespace-nowrap"><span class="text-xs px-2 py-0.5 rounded border ${badgeColors[item.roastery]}">${item.roastery}</span></td>
-                    <td class="p-4 whitespace-nowrap"><span class="text-xs px-2 py-0.5 rounded border ${badgeColors[item.category]}">${item.category}</span></td>
-                    <td class="p-4 font-bold text-white">${item.name}</td>
-                    <td class="p-4 text-xs"><span class="bg-stone-900 px-2 py-1 rounded text-stone-400">${item.roasting}</span></td>
-                    <td class="p-4 text-xs text-stone-400 italic">${item.process}</td>
-                    <td class="p-4 text-xs text-amber-300/90 font-medium max-w-[200px] truncate" title="${item.flavors.join(', ')}">${item.flavors.join(', ')}</td>
-                    <td class="p-4 font-bold text-right text-white">₩${item.price_krw.toLocaleString()}<span class="text-[11px] text-stone-600 font-normal"> (${item.weight_g}g)</span></td>
-                </tr>
-            `).join('');
+            chartEngineInstance = new Chart(ctx, {
+                type: 'scatter',
+                data: { datasets: compiledDatasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1c1a1a',
+                            titleColor: '#fbbf24',
+                            bodyColor: '#e0e0e0',
+                            borderColor: '#2e2a2a',
+                            borderWidth: 1,
+                            padding: 10,
+                            callbacks: {
+                                label: function(context) {
+                                    const meta = context.dataset.coffeeRawMeta;
+                                    return `[${meta.roastery}] ${meta.name} (${meta.roasting})`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            min: 1, max: 10,
+                            title: { display: true, text: '▶▶ 배전도 스케일 (Light → Medium → Dark) ▶▶', color: '#78716c', font: { size: 11 } },
+                            grid: { color: '#1f1c1c' }, ticks: { display: false }
+                        },
+                        y: {
+                            min: 1, max: 10,
+                            title: { display: true, text: '▲▲ 향미 구조화 (초콜릿/단맛 → 과일/화사함) ▲▲', color: '#78716c', font: { size: 11 } },
+                            grid: { color: '#1f1c1c' }, ticks: { display: false }
+                        }
+                    },
+                    onClick: (event, activeElements) => {
+                        if (activeElements.length > 0) {
+                            const datasetIndex = activeElements[0].datasetIndex;
+                            const targetMeta = chartEngineInstance.data.datasets[datasetIndex].coffeeRawMeta;
+                            updateLiveDetailPanel(targetMeta);
+                        }
+                    }
+                }
+            });
         }
 
-        // 실시간 입력 필터 이벤트 감지 등록
-        document.getElementById('keywordSearch').addEventListener('input', processFilterAndRender);
-        document.getElementById('roasteryFilter').addEventListener('change', processFilterAndRender);
-        document.getElementById('categoryFilter').addEventListener('change', processFilterAndRender);
+        // 다차원 복합 다중 필터 연산 및 그리드 동기화 렌더링 파이프라인
+        function processComplexFilterPipeline() {
+            const filterRoastery = document.getElementById('roasteryFilter').value;
+            const filterCategory = document.getElementById('categoryFilter').value;
+            const filterRoasting = document.getElementById('roastingFilter').value;
+            const queryOrigin = document.getElementById('originSearch').value.trim().toLowerCase();
+            const queryFarm = document.getElementById('farmSearch').value.trim().toLowerCase();
+            const queryFlavor = document.getElementById('flavorSearch').value.trim().toLowerCase();
 
-        // 첫 로딩 구동
-        window.addEventListener('DOMContentLoaded', fetchCoffeeDatabase);
-    </script>
-</body>
-</html>
+            currentFilteredSet = rawCoffeeStore.filter( coffee => {
+                const matchRoastery = filterRoastery === 'all' || coffee.roastery === filterRoastery;
+                const matchCategory = filterCategory === 'all' || coffee.category === filterCategory;
+                const matchRoasting = filterRoasting === 'all' || coffee.roasting === filterRoasting;
+                
+                const matchOrigin = queryOrigin === '' || coffee.origin.some(o => o.toLowerCase().includes(queryOrigin));
+                const matchFarm = queryFarm === '' || (coffee.farm && coffee.farm.toLowerCase().includes(queryFarm)) || (coffee.description.toLowerCase().includes(queryFarm));
+                const matchFlavor = queryFlavor === '' || coffee.flavors.some(f => f.toLowerCase().includes(queryFlavor));
+
+                return matchRoastery && matchCategory && matchRoasting && matchOrigin && matchFarm && matchFlavor;
+            });
+
+            // 상단 카운터 계측값 동기화
+            document.getElementById('gridCounter').innerText = `필터 조회: ${currentFilteredSet.length}개`;
+
+            // 가이드 가시성 토글
+            const targetTbody = document.getElementById('coffeeMainTableBody');
+            const noMatchGuide = document.getElementById('noMatchGuide');
+
+            if(currentFilteredSet.length === 0) {
+                targetTbody.innerHTML = '';
+                noMatchGuide.classList.remove('hidden');
+                renderClusterMatrixChart([]); // 차트 공백 처리
+                return;
+            }
+            noMatchGuide.classList.add('hidden');
+            targetTbody.innerHTML = '';
+
+            // 메모리 주소값 유지형 돔 빌드리스너 체인 (실시간 버그 해결 핵심부)
+            currentFilteredSet.forEach( coffee => {
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-stone-900/60 hover:bg-stone-900/30 cursor-pointer transition-colors";
+                tr.innerHTML = `
+                    <td class="p-4 whitespace-nowrap"><span class="text-xs px-2.5 py-0.5 rounded border border-stone-800 font-medium ${uiColorPalette[coffee.roastery]}">${coffee.roastery}</span></td>
+                    <td class="p-4 whitespace-nowrap"><span class="text-xs px-2 py-0.5 rounded-full border border-stone-800 ${uiColorPalette[coffee.category]}">${coffee.category}</span></td>
+                    <td class="p-4 font-bold text-white">${coffee.name}</td>
+                    <td class="p-4 text-xs text-stone-400">${coffee.origin.join(', ')}</td>
+                    <td class="p-4 text-xs"><span class="bg-stone-900 border border-stone-800 px-2 py-0.5 rounded text-stone-400 font-mono">${coffee.roasting}</span></td>
+                    <td class="p-4 text-xs text-amber-200/80 font-medium max-w-[240px] truncate" title="${coffee.flavors.join(', ')}">${coffee.flavors.join(', '
