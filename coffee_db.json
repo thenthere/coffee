@@ -18,6 +18,97 @@
     {
       "id": "N002",
       "roastery": "나무사이로",
+      "name": "피크닉",
+      "category": "블렌드",
+      "origin": ["Colombia", "Ethiopia"],
+      "process": "Natural Fermentation, Washed",
+      "roasting": "Medium",
+      "flavors": ["벚꽃", "체리", "파인애플", "쥬시", "초콜릿", "마카다미아", "버터"],
+      "weight_g": 200,
+      "price_krw": 20500,
+      "description": "콜롬비아 옴블리곤 내추럴과 에티오피아 워시드의 조합. 복숭아, 파인애플, 과일바구니 같은 유쾌하고 발랄한 향미."
+    },
+    {
+      "id": "N003",
+      "roastery": "나무사이로",
+      "name": "녹음",
+      "category": "블렌드",
+      "origin": ["Guatemala", "Kenya", "Mexico"],
+      "process": "Blended",
+      "roasting": "Dark",
+      "flavors": ["건자두", "카카오", "당밀", "묵직함"],
+      "weight_g": 200,
+      "price_krw": 18000,
+      "description": "4월에서 9월까지 시즈널 에스프레소 블렌드. 과테말라의 묵직함, 케냐의 선명함, 멕시코의 부드러움이 조화를 이룸."
+    },
+    {
+      "id": "N004",
+      "roastery": "나무사이로",
+      "name": "위 (WE)",
+      "category": "블렌드",
+      "origin": ["Guatemala", "Ethiopia"],
+      "process": "Washed",
+      "roasting": "Medium",
+      "flavors": ["자두", "천도복숭아", "바닐라", "부드러운 질감"],
+      "weight_g": 200,
+      "price_krw": 15500,
+      "description": "나무사이로 하우스 블렌드 1호. 복숭아의 향긋함과 부드러운 감촉이 특징."
+    },
+    {
+      "id": "N005",
+      "roastery": "나무사이로",
+      "name": "숲",
+      "category": "블렌드",
+      "origin": ["Ethiopia", "Brazil"],
+      "process": "Natural/Washed",
+      "roasting": "Well-done",
+      "flavors": ["볶은 땅콩", "향신료", "코코아", "레몬", "달콤쌉쌀"],
+      "weight_g": 200,
+      "price_krw": 15000,
+      "description": "달고나의 달콤 쌉싸름한 맛, 레몬, 민트의 싱그러운 느낌이 조화를 이루는 깊고 묵직한 공존 블렌드."
+    },
+    {
+      "id": "N006",
+      "roastery": "나무사이로",
+      "name": "다크우드",
+      "category": "블렌드",
+      "origin": ["Ethiopia", "Guatemala"],
+      "process": "Natural/Washed",
+      "roasting": "Dark",
+      "flavors": ["베리", "초콜릿", "농밀한 단맛", "감칠맛", "복합적"],
+      "weight_g": 200,
+      "price_krw": 15000,
+      "description": "첼로 선율처럼 묵직하면서도 매끄럽고 오랫동안 입안을 맴도는 여운과 농밀한 단맛이 특징."
+    },
+    {
+      "id": "N007",
+      "roastery": "나무사이로",
+      "name": "풍요로운 땅",
+      "category": "블렌드",
+      "origin": ["Brazil", "Colombia", "Guatemala"],
+      "process": "Natural/Washed",
+      "roasting": "Dark",
+      "flavors": ["밀크초콜릿", "땅콩카라멜", "오렌지", "향신료", "흑설탕"],
+      "weight_g": 200,
+      "price_krw": 13500,
+      "description": "누구나 편안히 마실 수 있는 스테디셀러. 달콤쌉싸름하고 산미가 낮으며 입 안 마무리가 깔끔하고 시원함."
+    },
+    {
+      "id": "N008",
+      "roastery": "나무사이로",
+      "name": "프렌치",
+      "category": "블렌드",
+      "origin": ["Guatemala", "India", "Nicaragua", "Ethiopia"],
+      "process": "Washed/Natural",
+      "roasting": "French",
+      "flavors": ["다크초콜릿", "초코브라우니", "볶은 아몬드", "흑당", "부드러움"],
+      "weight_g": 200,
+      "price_krw": 13000,
+      "description": "가장 깊고 묵직한 프렌치 볶음도. 진지하고 치열한 삶의 현장을 위해 다듬은 묵직한 매력의 커피."
+    },
+    {
+      "id": "N009",
+      "roastery": "나무사이로",
       "name": "내가 좋아하는 너는 언제나",
       "category": "싱글 오리진",
       "origin": ["Colombia"],
@@ -26,7 +117,7 @@
       "flavors": ["베르가못", "천도복숭아", "로즈마리", "자스민", "라임"],
       "weight_g": 100,
       "price_krw": 27500,
-      "description": "라스마리아스 농장 최고 랏인 '달콤한 강' 커피로 화사한 꽃, 허브향과 극상의 실키한 촉감의 게샤 원두."
+      "description": "나무사이로 20주년 기념 게샤(Gesha). 화사한 꽃, 허브향과 극상의 실키한 촉감."
     },
     {
       "id": "M001",
@@ -39,46 +130,20 @@
       "flavors": ["블랙커런트", "스트로베리", "고소함"],
       "weight_g": 200,
       "price_krw": 16200,
-      "description": "매뉴팩트커피의 대표 블렌드로 부드러운 스트로베리 뉘앙스와 과실의 상큼함, 은은한 단맛의 조화."
-    },
-    {
-      "id": "M002",
-      "roastery": "매뉴팩트",
-      "name": "콜드브루 오름",
-      "category": "간편 커피",
-      "origin": ["Brazil", "Ethiopia", "Guatemala"],
-      "process": "저온 장시간 액상 추출",
-      "roasting": "Dark",
-      "flavors": ["초콜릿", "카라멜", "메이플시럽"],
-      "weight_g": 500,
-      "price_krw": 13500,
-      "description": "초콜릿의 풍부한 단맛을 표현한 오름 블렌드를 간편하게 마실 수 있도록 저온 추출한 액상 콜드브루 커피."
+      "description": "대표적인 블렌드로 부드러운 스트로베리 뉘앙스와 과실의 상큼함의 조화."
     },
     {
       "id": "W001",
       "roastery": "WERK",
       "name": "베이비 블렌드",
       "category": "블렌드",
-      "origin": ["다국적 블렌딩"],
+      "origin": ["다국적 배합"],
       "process": "Washed, Natural",
       "roasting": "Medium-Dark",
       "flavors": ["초콜릿", "브라운슈가", "밸런스"],
       "weight_g": 200,
       "price_krw": 18000,
-      "description": "베르크커피의 스테디셀러로, 일상에서 언제 마셔도 고소하고 부드러운 텍스처와 균형 잡힌 맛이 특징."
-    },
-    {
-      "id": "W002",
-      "roastery": "WERK",
-      "name": "페루 라 만다리나 게이샤",
-      "category": "싱글 오리진",
-      "origin": ["Peru"],
-      "process": "Natural",
-      "roasting": "Light-Medium",
-      "flavors": ["오렌지", "자스민", "복합적인 향미"],
-      "weight_g": 200,
-      "price_krw": 25000,
-      "description": "페루 카하마르카 지역의 2위 랭크 최상위 게이샤 생두를 사용한 화사하고 선명한 복합미의 커피."
+      "description": "베르크의 스테디셀러로 일상에서 언제 마셔도 고소하고 균형 잡힌 맛."
     }
   ]
 }
