@@ -120,4 +120,257 @@
                     </thead>
                     <tbody id="coffeeMainTableBody" class="divide-y divide-stone-900 text-sm text-stone-300">
                         <tr>
-                            <td colspan="7
+                            <td colspan="7" class="p-8 text-center text-stone-500">데이터 저장소 파이프라인 연동 중...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="noMatchGuide" class="hidden text-center py-20 text-stone-600">
+                <span class="text-4xl block mb-3">🔍</span> 설정하신 필터 검색 조합 조건에 부합하는 원두 가이드가 존재하지 않습니다.
+            </div>
+        </section>
+    </div>
+
+    <script>
+        let rawCoffeeStore = []; 
+        let currentFilteredSet = [];
+        let chartEngineInstance = null;
+
+        const uiColorPalette = {
+            "Blend": "bg-blue-950/50 text-blue-400 border-blue-900/50",
+            "Single Origin": "bg-emerald-950/50 text-emerald-400 border-emerald-900/50",
+            "Powder": "bg-purple-950/50 text-purple-400 border-purple-900/50",
+            "나무사이로": "bg-orange-950/40 text-orange-400 border-orange-900/40",
+            "매뉴팩트": "bg-zinc-800 text-zinc-300 border-zinc-700",
+            "WERK": "bg-yellow-950/30 text-yellow-400 border-yellow-900/40"
+        };
+
+        const roastCoordinateAxisX = { 
+            'Light': 2, 'Medium Light': 3.5, 'Medium': 5, 
+            'Medium-Dark': 6.5, 'Well-done': 7.5, 'Dark': 8.5, 'French': 9.5 
+        };
+
+        function computeFlavorClusterAxisY(flavors, desc) {
+            const dynamicHighFruitNotes = ['복숭아', '체리', '자두', '라즈베리', '오렌지', '딸기', '과일', '산미', '플로럴', '장미', '꽃', '베리', '라임', '살구', '베르가못', '자스민', '쥬시', '벚꽃', '파인애플'];
+            const dynamicLowBitterNotes = ['초콜릿', '카카오', '카라멜', '단맛', '땅콩', '아몬드', '토피넛', '흑설탕', '당밀', '묵직함', '바닐라', '버터', '가죽', '오키'];
+            
+            let baseScore = 5.5; 
+            const combinedText = flavors.join(' ') + ' ' + desc;
+            
+            dynamicHighFruitNotes.forEach(word => { if(combinedText.includes(word)) baseScore += 0.7; });
+            dynamicLowBitterNotes.forEach(word => { if(combinedText.includes(word)) baseScore -= 0.7; });
+            
+            return Math.max(1.5, Math.min(9.5, baseScore)); 
+        }
+
+        // 경로 추적 로직을 완전히 새로 고친 파일 로드 스크립트
+        async function initiateCoffeeApplication() {
+            try {
+                // 현재 도메인 주소창 뒤의 구조를 파악해 최적의 파일 경로를 명확히 사수합니다.
+                let cleanPath = window.location.pathname;
+                if (!cleanPath.endsWith('/')) {
+                    cleanPath = cleanPath.substring(0, cleanPath.lastIndexOf('/') + 1);
+                }
+                const strictEndpoint = window.location.origin + cleanPath + 'coffee_db.json';
+
+                const fetchPipe = await fetch(strictEndpoint);
+                if(!fetchPipe.ok) throw new Error('파일을 찾을 수 없습니다.');
+                const parsedDb = await fetchPipe.json();
+
+                document.getElementById('sync-badge').innerText = `DB 연동 완료 (갱신: ${parsedDb.last_updated})`;
+
+                // 불러온 json 구조 분석 및 연산 가공 처리
+                rawCoffeeStore = parsedDb.products.map(coffee => {
+                    return {
+                        ...coffee,
+                        // 업로드해주신 JSON 파일의 실제 소유주 명칭 주입
+                        roastery: coffee.roastery || parsedDb.roaster || "나무사이로", 
+                        clusterX: roastCoordinateAxisX[coffee.roasting] || 5,
+                        clusterY: computeFlavorClusterAxisY(coffee.flavors, coffee.description)
+                    }
+                });
+
+                processComplexFilterPipeline();
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('coffeeMainTableBody').innerHTML = `
+                    <tr><td colspan="7" class="p-8 text-center text-red-400">⚠️ coffee_db.json 파일을 불러오지 못했습니다. 파일이 index.html과 동일한 위치에 같은 이름으로 커밋되어 있는지 점검해 주세요.</td></tr>`;
+            }
+        }
+
+        function updateLiveDetailPanel(coffee) {
+            const panel = document.getElementById('liveDetailPanel');
+            panel.innerHTML = `
+                <div class="space-y-5 animate-fadeIn">
+                    <div class="flex justify-between items-center">
+                        <div class="flex gap-2">
+                            <span class="text-[11px] font-bold px-2 py-0.5 rounded border ${uiColorPalette[coffee.roastery] || 'bg-stone-800'}">${coffee.roastery}</span>
+                            <span class="text-[11px] font-bold px-2 py-0.5 rounded border ${uiColorPalette[coffee.type] || 'bg-stone-800'}">${coffee.type}</span>
+                        </div>
+                        <span class="text-xs text-stone-600 font-mono">ID: ${coffee.id}</span>
+                    </div>
+
+                    <div>
+                        <h3 class="text-2xl font-bold text-white tracking-tight">${coffee.name}</h3>
+                        <p class="text-xs text-stone-400 mt-1">원산지: ${coffee.origin.join(', ')} · 볶음도: <span class="text-amber-400 font-medium">${coffee.roasting}</span></p>
+                    </div>
+
+                    <div class="bg-stone-900/60 p-4 rounded-xl border border-stone-800 space-y-3 text-xs">
+                        <div>
+                            <span class="text-stone-500 font-bold block mb-0.5">☕ 가공방식 (Process)</span>
+                            <span class="text-stone-300 text-sm">${coffee.process}</span>
+                        </div>
+                        <div>
+                            <span class="text-stone-500 font-bold block mb-0.5">🍇 플레이버 컵노트</span>
+                            <span class="text-amber-300 font-medium text-sm">${coffee.flavors.join(', ')}</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <span class="text-[10px] font-bold text-stone-500 uppercase tracking-wide">원두 스토리</span>
+                        <p class="text-sm text-stone-300 bg-stone-950 p-3.5 rounded-xl border border-stone-900 leading-relaxed">${coffee.description}</p>
+                    </div>
+
+                    <div class="flex justify-between items-center pt-3 border-t border-stone-800">
+                        <span class="text-xs text-stone-500">패키지 중량: ${coffee.weight_g}g</span>
+                        <span class="text-amber-400 font-bold text-2xl">₩${coffee.price_krw.toLocaleString()}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderClusterMatrixChart(chartData) {
+            const ctx = document.getElementById('clusterMatrixMap').getContext('2d');
+            if (chartEngineInstance) { chartEngineInstance.destroy(); }
+
+            const colorPicker = (roastery) => {
+                if(roastery === '나무사이로') return '#f97316';
+                if(roastery === '매뉴팩트') return '#a1a1aa';
+                return '#facc15';
+            };
+
+            const compiledDatasets = chartData.map(coffee => {
+                return {
+                    label: coffee.name,
+                    data: [{ x: coffee.clusterX, y: coffee.clusterY }],
+                    backgroundColor: colorPicker(coffee.roastery),
+                    pointRadius: 10,
+                    pointHoverRadius: 14,
+                    borderColor: '#121212',
+                    borderWidth: 1.5,
+                    coffeeRawMeta: coffee
+                }
+            });
+
+            chartEngineInstance = new Chart(ctx, {
+                type: 'scatter',
+                data: { datasets: compiledDatasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1c1a1a',
+                            callbacks: {
+                                label: function(context) {
+                                    const meta = context.dataset.coffeeRawMeta;
+                                    return `[${meta.roastery}] ${meta.name} (${meta.roasting})`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            min: 1, max: 10,
+                            title: { display: true, text: '▶▶ 배전도 스케일 (Light → Medium → Dark) ▶▶', color: '#78716c', font: { size: 11 } },
+                            grid: { color: '#1f1c1c' }, ticks: { display: false }
+                        },
+                        y: {
+                            min: 1, max: 10,
+                            title: { display: true, text: '▲▲ 향미 구조화 (초콜릿/단맛 → 과일/화사함) ▲▲', color: '#78716c', font: { size: 11 } },
+                            grid: { color: '#1f1c1c' }, ticks: { display: false }
+                        }
+                    },
+                    onClick: (event, activeElements) => {
+                        if (activeElements.length > 0) {
+                            const datasetIndex = activeElements[0].datasetIndex;
+                            const targetMeta = chartEngineInstance.data.datasets[datasetIndex].coffeeRawMeta;
+                            updateLiveDetailPanel(targetMeta);
+                        }
+                    }
+                }
+            });
+        }
+
+        function processComplexFilterPipeline() {
+            const filterRoastery = document.getElementById('roasteryFilter').value;
+            const filterCategory = document.getElementById('categoryFilter').value;
+            const filterRoasting = document.getElementById('roastingFilter').value;
+            const queryOrigin = document.getElementById('originSearch').value.trim().toLowerCase();
+            const queryFarm = document.getElementById('farmSearch').value.trim().toLowerCase();
+            const queryFlavor = document.getElementById('flavorSearch').value.trim().toLowerCase();
+
+            currentFilteredSet = rawCoffeeStore.filter(coffee => {
+                const matchRoastery = filterRoastery === 'all' || coffee.roastery === filterRoastery;
+                
+                // 업로드 데이터의 type 스펙(Blend, Single Origin, Powder) 유연하게 동치 비교 처리
+                let mappedType = "기타";
+                if(coffee.type === "Blend") mappedType = "블렌드";
+                if(coffee.type === "Single Origin") mappedType = "싱글 오리진";
+                if(coffee.type === "Powder") mappedType = "간편 커피";
+                const matchCategory = filterCategory === 'all' || mappedType === filterCategory;
+                
+                const matchRoasting = filterRoasting === 'all' || coffee.roasting === filterRoasting;
+                const matchOrigin = queryOrigin === '' || coffee.origin.some(o => o.toLowerCase().includes(queryOrigin));
+                const matchFarm = queryFarm === '' || coffee.description.toLowerCase().includes(queryFarm);
+                const matchFlavor = queryFlavor === '' || coffee.flavors.some(f => f.toLowerCase().includes(queryFlavor));
+
+                return matchRoastery && matchCategory && matchRoasting && matchOrigin && matchFarm && matchFlavor;
+            });
+
+            document.getElementById('gridCounter').innerText = `필터 조회: ${currentFilteredSet.length}개`;
+
+            const targetBody = document.getElementById('coffeeMainTableBody');
+            const noMatchGuide = document.getElementById('noMatchGuide');
+
+            if(currentFilteredSet.length === 0) {
+                targetBody.innerHTML = '';
+                noMatchGuide.classList.remove('hidden');
+                renderClusterMatrixChart([]);
+                return;
+            }
+            noMatchGuide.classList.add('hidden');
+            targetBody.innerHTML = '';
+
+            currentFilteredSet.forEach(coffee => {
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-stone-900/60 hover:bg-stone-900/40 cursor-pointer transition-colors";
+                tr.innerHTML = `
+                    <td class="p-4 whitespace-nowrap"><span class="text-xs px-2.5 py-0.5 rounded border border-stone-800 font-medium ${uiColorPalette[coffee.roastery] || 'bg-stone-800'}">${coffee.roastery}</span></td>
+                    <td class="p-4 whitespace-nowrap"><span class="text-xs px-2 py-0.5 rounded-full border border-stone-800 ${uiColorPalette[coffee.type] || 'bg-stone-800'}">${coffee.type}</span></td>
+                    <td class="p-4 font-bold text-white">${coffee.name}</td>
+                    <td class="p-4 text-xs text-stone-400">${coffee.origin.join(', ')}</td>
+                    <td class="p-4 text-xs"><span class="bg-stone-900 border border-stone-800 px-2 py-0.5 rounded text-stone-400 font-mono">${coffee.roasting}</span></td>
+                    <td class="p-4 text-xs text-amber-300/90 font-medium max-w-[240px] truncate">${coffee.flavors.join(', ')}</td>
+                    <td class="p-4 font-bold text-right text-white">₩${coffee.price_krw.toLocaleString()}</td>
+                `;
+                tr.addEventListener('click', () => updateLiveDetailPanel(coffee));
+                targetBody.appendChild(tr);
+            });
+
+            renderClusterMatrixChart(currentFilteredSet);
+        }
+
+        document.getElementById('roasteryFilter').addEventListener('change', processComplexFilterPipeline);
+        document.getElementById('categoryFilter').addEventListener('change', processComplexFilterPipeline);
+        document.getElementById('roastingFilter').addEventListener('change', processComplexFilterPipeline);
+        document.getElementById('originSearch').addEventListener('input', processComplexFilterPipeline);
+        document.getElementById('farmSearch').addEventListener('input', processComplexFilterPipeline);
+        document.getElementById('flavorSearch').addEventListener('input', processComplexFilterPipeline);
+
+        window.addEventListener('DOMContentLoaded', initCoffeeApplication);
+    </script>
+</body>
+</html>
