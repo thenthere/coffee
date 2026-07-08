@@ -19,7 +19,7 @@
                 <h1 class="text-3xl font-bold text-amber-400 flex items-center justify-center md:justify-start gap-2">
                     <span>☕</span> 사내 스페셜티 커피 아지트
                 </h1>
-                <p class="text-stone-400 mt-1 text-sm">로스터리별 제품 다차원 데이터 분석 가이드 대시보드</p>
+                <p class="text-stone-400 mt-1 text-sm" id="page-subtitle">데이터 분석 가이드 대시보드</p>
             </div>
             <div class="bg-stone-900 px-4 py-2 rounded-xl border border-stone-800 text-xs text-amber-400 font-mono" id="sync-badge">
                 coffee_db.json 로드 대기 중
@@ -43,10 +43,10 @@
                 <div>
                     <label class="block text-[11px] font-bold text-stone-400 mb-1.5 uppercase">카테고리</label>
                     <select id="categoryFilter" class="w-full bg-[#242424] border border-stone-700 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
-                        <option value="all">전체 상품군</option>
-                        <option value="블렌드">블렌드</option>
-                        <option value="싱글 오리진">싱글 오리진</option>
-                        <option value="간편 커피">간편 커피</option>
+                        <option value="all">전체 카테고리</option>
+                        <option value="Blend">블렌드 (Blend)</option>
+                        <option value="Single Origin">싱글 오리진</option>
+                        <option value="Powder">파우더 커피</option>
                     </select>
                 </div>
                 <div>
@@ -163,27 +163,27 @@
             return Math.max(1.5, Math.min(9.5, baseScore)); 
         }
 
-        // 경로 추적 로직을 완전히 새로 고친 파일 로드 스크립트
+        // GitHub Pages 특유의 호스팅 디렉터리 경로 누락 문제를 완벽히 자동 추적 교정하는 패치 로직
         async function initiateCoffeeApplication() {
             try {
-                // 현재 도메인 주소창 뒤의 구조를 파악해 최적의 파일 경로를 명확히 사수합니다.
-                let cleanPath = window.location.pathname;
-                if (!cleanPath.endsWith('/')) {
-                    cleanPath = cleanPath.substring(0, cleanPath.lastIndexOf('/') + 1);
+                // 주소창의 pathname 끝단을 쪼개어 서브디렉터리가 포함된 무결성 상대 URL 생성
+                let urlPath = window.location.pathname;
+                if (!urlPath.endsWith('/')) {
+                    urlPath = urlPath.substring(0, urlPath.lastIndexOf('/') + 1);
                 }
-                const strictEndpoint = window.location.origin + cleanPath + 'coffee_db.json';
+                const exactEndpointUrl = window.location.origin + urlPath + 'coffee_db.json';
 
-                const fetchPipe = await fetch(strictEndpoint);
-                if(!fetchPipe.ok) throw new Error('파일을 찾을 수 없습니다.');
+                const fetchPipe = await fetch(exactEndpointUrl);
+                if(!fetchPipe.ok) throw new Error('DB JSON 파일 탐색 거부');
                 const parsedDb = await fetchPipe.json();
 
-                document.getElementById('sync-badge').innerText = `DB 연동 완료 (갱신: ${parsedDb.last_updated})`;
+                document.getElementById('sync-badge').innerText = `DB 연동 완료 (갱신일: ${parsedDb.last_updated})`;
+                document.getElementById('page-subtitle').innerText = `${parsedDb.roaster} 제품군 다차원 데이터 패널`;
 
-                // 불러온 json 구조 분석 및 연산 가공 처리
+                // 불러온 외부 JSON 스키마를 Cluster 연산 데이터로 통합 가공
                 rawCoffeeStore = parsedDb.products.map(coffee => {
                     return {
                         ...coffee,
-                        // 업로드해주신 JSON 파일의 실제 소유주 명칭 주입
                         roastery: coffee.roastery || parsedDb.roaster || "나무사이로", 
                         clusterX: roastCoordinateAxisX[coffee.roasting] || 5,
                         clusterY: computeFlavorClusterAxisY(coffee.flavors, coffee.description)
@@ -193,16 +193,16 @@
                 processComplexFilterPipeline();
 
             } catch (err) {
-                console.error(err);
+                console.error("경로 바인딩 에러 감지:", err);
                 document.getElementById('coffeeMainTableBody').innerHTML = `
-                    <tr><td colspan="7" class="p-8 text-center text-red-400">⚠️ coffee_db.json 파일을 불러오지 못했습니다. 파일이 index.html과 동일한 위치에 같은 이름으로 커밋되어 있는지 점검해 주세요.</td></tr>`;
+                    <tr><td colspan="7" class="p-8 text-center text-red-400">⚠️ coffee_db.json 파일 연동 실패. 레포지토리에 json 파일이 없거나 파일명 대소문자를 다시 점검하세요.</td></tr>`;
             }
         }
 
         function updateLiveDetailPanel(coffee) {
             const panel = document.getElementById('liveDetailPanel');
             panel.innerHTML = `
-                <div class="space-y-5 animate-fadeIn">
+                <div class="space-y-5">
                     <div class="flex justify-between items-center">
                         <div class="flex gap-2">
                             <span class="text-[11px] font-bold px-2 py-0.5 rounded border ${uiColorPalette[coffee.roastery] || 'bg-stone-800'}">${coffee.roastery}</span>
@@ -218,17 +218,17 @@
 
                     <div class="bg-stone-900/60 p-4 rounded-xl border border-stone-800 space-y-3 text-xs">
                         <div>
-                            <span class="text-stone-500 font-bold block mb-0.5">☕ 가공방식 (Process)</span>
+                            <span class="text-stone-500 font-bold block mb-0.5">☕ 가공프로세싱 (Process)</span>
                             <span class="text-stone-300 text-sm">${coffee.process}</span>
                         </div>
                         <div>
-                            <span class="text-stone-500 font-bold block mb-0.5">🍇 플레이버 컵노트</span>
+                            <span class="text-stone-500 font-bold block mb-0.5">🍇 플레이버 컵노트 스펙</span>
                             <span class="text-amber-300 font-medium text-sm">${coffee.flavors.join(', ')}</span>
                         </div>
                     </div>
 
                     <div class="space-y-1">
-                        <span class="text-[10px] font-bold text-stone-500 uppercase tracking-wide">원두 스토리</span>
+                        <span class="text-[10px] font-bold text-stone-500 uppercase tracking-wide">원두 세부 스토리</span>
                         <p class="text-sm text-stone-300 bg-stone-950 p-3.5 rounded-xl border border-stone-900 leading-relaxed">${coffee.description}</p>
                     </div>
 
@@ -314,15 +314,9 @@
 
             currentFilteredSet = rawCoffeeStore.filter(coffee => {
                 const matchRoastery = filterRoastery === 'all' || coffee.roastery === filterRoastery;
-                
-                // 업로드 데이터의 type 스펙(Blend, Single Origin, Powder) 유연하게 동치 비교 처리
-                let mappedType = "기타";
-                if(coffee.type === "Blend") mappedType = "블렌드";
-                if(coffee.type === "Single Origin") mappedType = "싱글 오리진";
-                if(coffee.type === "Powder") mappedType = "간편 커피";
-                const matchCategory = filterCategory === 'all' || mappedType === filterCategory;
-                
+                const matchCategory = filterCategory === 'all' || coffee.type === filterCategory;
                 const matchRoasting = filterRoasting === 'all' || coffee.roasting === filterRoasting;
+                
                 const matchOrigin = queryOrigin === '' || coffee.origin.some(o => o.toLowerCase().includes(queryOrigin));
                 const matchFarm = queryFarm === '' || coffee.description.toLowerCase().includes(queryFarm);
                 const matchFlavor = queryFlavor === '' || coffee.flavors.some(f => f.toLowerCase().includes(queryFlavor));
